@@ -22,7 +22,7 @@ def stdLogger(loggerName):
     log.addHandler(stdHandler)
     return log
 
-# graph(height)
+# graph(height, bar1, bar2)
 # Displays a separate window using matplotlib to graph the data
 # Highlights the bars used to create the largest area in green
 
@@ -30,7 +30,7 @@ def graph(height, bar1, bar2):
     y_pos = np.arange(len(height))
     
     barlist = plt.bar(y_pos, height, align = 'center', alpha = 0.5)
-    plt.ylabel("Water Height")
+    plt.ylabel("Container Height")
     barlist[bar1].set_color('g')
     barlist[bar2].set_color('g')
     plt.show()
@@ -51,35 +51,33 @@ def maxArea(height, *debug_option):
         log.setLevel(logging.DEBUG)
         log.debug("Logs ready")
 
-    l = len(height) # store the length of the list
-    log.debug("List length: " + str(l))
-    i = 0
+    log.debug("List length: " + str(len(height)))
     area = 0 # Area between i and j
-    result = ([0,0], 0) # Tuple that stores the indicies and area of largest pair
+    result = ([0,0], 0) # Tuple that stores the indexes and area of largest pair
+    i = 0
+    j = len(height) - 1
 
-    # This nested loop iterates through the list finding the largest area between two vertical lines
-    while(i < l):
-        j = i + 1
-        log.debug(" i = " + str(i) + " j = " + str(j))
-        while(j < l):
-            log.debug("j = " + str(j))
-            # Calculate area between i and j
-            if(height[i] <= height[j]):
-                area = height[i] * (j - i)
-            else:
-                area = height[j] * (j - i)
-            log.debug("Area between (" + str(height[i]) + ", " + str(i) + ") and (" + str(height[j]) + ", " + str(j) + ") = " + str(area))
-            # Compare area with previously stored max value
-            log.debug("current max area: " + str(result[1]))
-            if(result[1] <= area):
-                result = ([i,j], area)
-                log.debug("New max value!")
-                log.debug("result: " + str(result))
-            else:
-                log.debug(str(area) + " is not larger than max value")
-            j += 1
-        i += 1
-    
+    # This loop uses a two pointer method to iterate from each end of the list and find the largest area
+    while(i < j):
+        log.debug("i = " + str(i) + " j = " + str(j))
+        if(height[i] < height[j]):
+            area = height[i] * (j - i)
+        else:
+            area = height[j] * (j - i)
+        log.debug("area = " + str(area))
+        if(result[1] < area):
+            log.debug(str(result[1]) + " is less than " + str(area))
+            result = ([i,j], area)
+        else:
+            log.debug(str(result[1]) + " is not less than " + str(area))
+        if(height[i] < height[j]):
+            i += 1
+            log.debug("Moving i to the right")
+        else:
+            j -= 1
+            log.debug("Moving j to the left")
+
+
     log.debug("Max area is between (" + str(result[0][0]) + ", " + str(height[result[0][0]]) + ") and (" + str(result[0][1]) + ", " + str(height[result[0][1]]) + ") with an area of " + str(result[1]))
 
     # If caller has requested a graph, make it happen too!
@@ -100,22 +98,17 @@ else:
     mainLog = stdLogger("mainLogger")
     # Pass DEBUG and/or GRAPH options to maxArea
     options = list()
-    if("DEBUG" in sys.argv):
-        options.append('DEBUG')
-        mainLog.setLevel(logging.DEBUG)
-        mainLog.debug("Logs ready")
 
-    if("GRAPH" in sys.argv):
-        options.append('GRAPH')
-
-    args = list() # Place arguments into list to pass it into maxArea
+    args = list() # Place integer arguments into list to pass them into maxArea
     for arg in sys.argv:
         mainLog.debug(arg)
         try:
             args.append(int(arg))
         except ValueError:
-            if(arg == "waterContainer.py" or arg == "DEBUG" or arg == "GRAPH"):
+            if(arg == "waterContainer.py"):
                 pass
+            elif(arg == "DEBUG" or arg == "GRAPH"):
+                options.append(arg)
             else:
                 mainLog.warning(arg + " is not an integer")
     
